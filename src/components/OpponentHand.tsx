@@ -31,33 +31,31 @@ const OpponentHand = ({
     }
   };
   
+  // Calculate the ideal card overlap based on number of cards
+  const getCardOverlap = (total: number) => {
+    if (total <= 3) return 0;
+    if (total <= 6) return -20;
+    if (total <= 10) return -30;
+    return -35; // Maximum overlap for many cards
+  };
+  
   const getCardsContainerStyle = () => {
+    const overlap = getCardOverlap(cardCount);
+    
     switch (position) {
       case 'left':
-        return "flex flex-col items-center justify-center -rotate-90";
+        return `flex flex-col items-center justify-center -rotate-90 ${cardCount > 7 ? 'max-h-[60vh]' : ''}`;
       case 'top':
-        return "flex flex-row items-center justify-center rotate-180";
+        return `flex flex-row items-center justify-center rotate-180 ${cardCount > 7 ? 'max-w-[80vw]' : ''}`;
       case 'right':
-        return "flex flex-col items-center justify-center rotate-90";
+        return `flex flex-col items-center justify-center rotate-90 ${cardCount > 7 ? 'max-h-[60vh]' : ''}`;
       default:
         return "";
     }
   };
   
-  const getCardStyle = (index: number, total: number) => {
-    // Scale down for smaller display
-    const scaleFactor = position === 'top' ? 0.7 : 0.7;
-    
-    // Calculate overlap for cards
-    const overlapFactor = Math.min(1, 7 / total); // Reduce overlap with more cards
-    const offset = 15 * overlapFactor;
-    
-    return {
-      transform: `scale(${scaleFactor})`,
-      marginLeft: position === 'top' ? (index === 0 ? 0 : -70 * scaleFactor) : 0,
-      marginTop: position !== 'top' ? (index === 0 ? 0 : -70 * scaleFactor) : 0,
-    };
-  };
+  // Scale down for smaller display
+  const scaleFactor = position === 'top' ? 0.7 : 0.7;
   
   return (
     <div className={getContainerStyle()}>
@@ -70,9 +68,14 @@ const OpponentHand = ({
           <motion.div
             key={index}
             className="uno-card uno-card-back"
-            style={getCardStyle(index, cardCount)}
+            style={{
+              transform: `scale(${scaleFactor})`,
+              marginLeft: position === 'top' ? (index === 0 ? 0 : getCardOverlap(cardCount)) : 0,
+              marginTop: position !== 'top' ? (index === 0 ? 0 : getCardOverlap(cardCount)) : 0,
+              zIndex: index
+            }}
             initial={false}
-            animate={isCurrentPlayer ? { y: [0, -5, 0], scale: [1, 1.02, 1], transition: { duration: 1.5, repeat: Infinity, repeatType: 'reverse' } } : {}}
+            animate={isCurrentPlayer ? { y: [0, -5, 0], scale: [scaleFactor, scaleFactor * 1.02, scaleFactor], transition: { duration: 1.5, repeat: Infinity, repeatType: 'reverse' } } : {}}
           >
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-2xl font-bold text-white transform -rotate-45 bg-white/10 px-3 py-1 rounded-lg">

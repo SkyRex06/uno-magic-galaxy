@@ -53,7 +53,7 @@ const DiscardPile = ({
         
         {isPlayerTurn && (
           <motion.div 
-            className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-indigo-500/80 text-white text-xs px-2 py-0.5 rounded-full"
+            className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-indigo-500/80 text-white text-xs px-3 py-1.5 rounded-full"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}

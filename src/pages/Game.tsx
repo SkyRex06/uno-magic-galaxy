@@ -54,7 +54,7 @@ const GameContent = () => {
           <AnimatePresence>
             {state.gameStatus === 'playing' && (
               <motion.div 
-                className="fixed top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-2 max-w-xs text-white text-xs"
+                className="fixed top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-2 max-w-xs text-white text-xs z-50"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}

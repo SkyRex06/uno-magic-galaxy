@@ -46,23 +46,29 @@ const PlayerHand = ({
     }
   }, [selectedCard, playCard]);
   
-  // Calculate card positioning for hand effect
-  const getCardStyle = (index: number, total: number) => {
-    const maxSpread = Math.min(40, 360 / total); // Limit spread for many cards
-    const rotation = maxSpread * (index - (total - 1) / 2) * 0.2;
+  // Calculate optimal card display parameters based on number of cards
+  const calculateCardDisplay = (totalCards: number) => {
+    const isLargeHand = totalCards > 7;
     
-    // Calculate horizontal position based on number of cards
-    const spreadFactor = Math.min(1, 7 / total); // Reduce spread with more cards
-    const xOffset = (index - (total - 1) / 2) * 30 * spreadFactor;
-    
-    // Calculate vertical position based on rotation
-    const yOffset = Math.abs(rotation) * 0.3;
+    // Adjust overlap factor based on the number of cards
+    let overlapFactor = 0;
+    if (totalCards <= 5) {
+      overlapFactor = 0; // No overlap for small hands
+    } else if (totalCards <= 8) {
+      overlapFactor = -30; // Slight overlap
+    } else if (totalCards <= 12) {
+      overlapFactor = -45; // Medium overlap
+    } else {
+      overlapFactor = -55; // Large overlap for many cards
+    }
     
     return {
-      transform: `translateX(${xOffset}px) translateY(${yOffset}px) rotate(${rotation}deg)`,
-      marginLeft: index === 0 ? 0 : -60, // Overlap cards
+      isLargeHand,
+      overlapFactor
     };
   };
+  
+  const { isLargeHand, overlapFactor } = calculateCardDisplay(cards.length);
   
   const isCardPlayable = useCallback((card: CardType) => {
     return isCurrentPlayer && canPlayCard(card, topCard, currentColor);
@@ -83,18 +89,30 @@ const PlayerHand = ({
         )}
       </AnimatePresence>
       
-      <div className="relative flex justify-center items-center min-h-36 mt-12">
-        <div className="flex justify-center relative">
-          {cards.map((card, index) => (
-            <CardComponent
-              key={card.id}
-              card={card}
-              isPlayable={isCardPlayable(card)}
-              showFront={true}
-              onClick={() => handleCardClick(card)}
-              style={getCardStyle(index, cards.length)}
-            />
-          ))}
+      <div className="relative flex justify-center items-center mt-12">
+        <div className={`flex justify-center ${isLargeHand ? 'overflow-x-auto max-w-[90vw] pb-4 px-4 scrollbar-none' : ''}`}>
+          <div className="flex items-center">
+            {cards.map((card, index) => (
+              <motion.div
+                key={card.id}
+                className="relative"
+                style={{ 
+                  zIndex: isCardPlayable(card) ? 20 + index : 10 + index, 
+                  marginLeft: index === 0 ? 0 : `${overlapFactor}px`
+                }}
+                initial={{ scale: 0.8, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                transition={{ delay: index * 0.05, duration: 0.2 }}
+              >
+                <CardComponent
+                  card={card}
+                  isPlayable={isCardPlayable(card)}
+                  showFront={true}
+                  onClick={() => handleCardClick(card)}
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
