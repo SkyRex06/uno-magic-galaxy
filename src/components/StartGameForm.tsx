@@ -2,96 +2,99 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '@/context/GameContext';
+import { Input } from './ui/input';
+import { ArrowRight, Users } from 'lucide-react';
 
 const StartGameForm = () => {
-  const [playerName, setPlayerName] = useState('');
-  const [aiPlayerCount, setAiPlayerCount] = useState(3);
   const { startGame } = useGame();
-  
-  const handleSubmit = (e: React.FormEvent) => {
+  const [playerName, setPlayerName] = useState('');
+  const [aiCount, setAiCount] = useState(3);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleStartGame = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!playerName.trim()) return;
     
-    // Use a default name if none provided
-    const name = playerName.trim() || 'Player';
-    startGame(name, aiPlayerCount);
+    setIsLoading(true);
+    // Simulate loading for smoother transition
+    setTimeout(() => {
+      startGame(playerName, aiCount);
+      setIsLoading(false);
+    }, 800);
   };
-  
+
   return (
     <motion.div
-      className="max-w-md w-full glass-panel p-8"
+      className="w-full max-w-md glass-panel p-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.h2 
-        className="text-3xl font-bold text-white mb-6 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        Start UNO Game
-      </motion.h2>
+      <h2 className="text-3xl font-bold text-white mb-6 text-center">Start New Game</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <motion.div 
-          className="space-y-2"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <label htmlFor="playerName" className="block text-sm font-medium text-white">
-            Your Name
-          </label>
-          <input
+      <form onSubmit={handleStartGame} className="space-y-6">
+        <div className="space-y-2">
+          <label className="text-white/90 text-sm font-medium">Your Name</label>
+          <Input
             type="text"
-            id="playerName"
-            placeholder="Enter your name"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="w-full px-4 py-3 bg-white/10 rounded-xl border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+            placeholder="Enter your name"
+            className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+            required
+            autoFocus
+            maxLength={15}
           />
-        </motion.div>
+        </div>
         
-        <motion.div 
-          className="space-y-2"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <label htmlFor="aiPlayers" className="block text-sm font-medium text-white">
-            AI Opponents
+        <div className="space-y-2">
+          <label className="text-white/90 text-sm font-medium flex items-center">
+            <Users size={16} className="mr-2" />
+            Number of AI Opponents
           </label>
-          <div className="flex items-center space-x-4">
-            <button
-              type="button"
-              onClick={() => setAiPlayerCount(Math.max(1, aiPlayerCount - 1))}
-              className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20"
-            >
-              -
-            </button>
-            <span className="text-xl text-white font-medium w-8 text-center">
-              {aiPlayerCount}
-            </span>
-            <button
-              type="button"
-              onClick={() => setAiPlayerCount(Math.min(3, aiPlayerCount + 1))}
-              className="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center border border-white/20 hover:bg-white/20"
-            >
-              +
-            </button>
+          <div className="flex items-center justify-between bg-white/10 rounded-md p-1">
+            {[1, 2, 3].map((num) => (
+              <motion.button
+                key={num}
+                type="button"
+                className={`relative flex-1 py-2 rounded-md text-center ${
+                  aiCount === num 
+                    ? "text-white"
+                    : "text-white/60 hover:text-white/80"
+                }`}
+                onClick={() => setAiCount(num)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {aiCount === num && (
+                  <motion.div
+                    className="absolute inset-0 bg-white/20 rounded-md z-0"
+                    layoutId="activePlayers"
+                    initial={false}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10">{num}</span>
+              </motion.button>
+            ))}
           </div>
-        </motion.div>
+        </div>
         
         <motion.button
           type="submit"
-          className="btn-primary w-full"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="w-full btn-primary flex items-center justify-center space-x-2"
+          disabled={!playerName.trim() || isLoading}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
         >
-          Start Game
+          {isLoading ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <span>Start Game</span>
+              <ArrowRight size={16} />
+            </>
+          )}
         </motion.button>
       </form>
     </motion.div>

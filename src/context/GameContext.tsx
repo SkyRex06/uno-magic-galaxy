@@ -8,7 +8,7 @@ import {
   generateId,
   shuffleDeck
 } from '@/utils/gameUtils';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Define action types
 type GameAction =
@@ -115,8 +115,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             const cardsToDraw = state.deck.slice(-2);
             const remainingDeck = state.deck.slice(0, -2);
             
-            const playerTargetIndex = updatedPlayers.findIndex(p => p.id === nextPlayer.id);
-            updatedPlayers[playerTargetIndex] = {
+            const targetPlayerIndex = updatedPlayers.findIndex(p => p.id === nextPlayer.id);
+            updatedPlayers[targetPlayerIndex] = {
               ...nextPlayer,
               cards: [...nextPlayer.cards, ...cardsToDraw]
             };

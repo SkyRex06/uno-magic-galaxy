@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { Card as CardType } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -14,7 +14,8 @@ interface CardProps {
   style?: React.CSSProperties;
 }
 
-const CardComponent = ({
+// Using forwardRef to properly pass refs to motion components
+const CardComponent = forwardRef<HTMLDivElement, CardProps>(({
   card,
   isPlayable = false,
   isTopCard = false,
@@ -22,7 +23,7 @@ const CardComponent = ({
   onClick,
   disabled = false,
   style
-}: CardProps) => {
+}, ref) => {
   const [isHovered, setIsHovered] = useState(false);
   
   useEffect(() => {
@@ -95,6 +96,7 @@ const CardComponent = ({
   
   return (
     <motion.div
+      ref={ref}
       className={cn(
         "uno-card",
         getColorClass(),
@@ -153,6 +155,8 @@ const CardComponent = ({
       )}
     </motion.div>
   );
-};
+});
+
+CardComponent.displayName = 'CardComponent';
 
 export default CardComponent;
