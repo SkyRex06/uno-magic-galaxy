@@ -55,23 +55,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const card = currentPlayer.cards[cardIndex];
       const topCard = state.discardPile[state.discardPile.length - 1];
       
-      // Check if the card can be played
       if (!canPlayCard(card, topCard, state.currentColor)) {
         return state;
       }
       
-      // Remove the card from the player's hand
       const updatedPlayerCards = [...currentPlayer.cards];
       updatedPlayerCards.splice(cardIndex, 1);
       
-      // Update player
       const updatedPlayers = [...state.players];
       updatedPlayers[state.currentPlayerIndex] = {
         ...currentPlayer,
         cards: updatedPlayerCards
       };
       
-      // Check if player has won
       if (updatedPlayerCards.length === 0) {
         return {
           ...state,
@@ -84,14 +80,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
       }
       
-      // Process the card effects
       let nextPlayerIndex = state.currentPlayerIndex;
       let direction = state.gameDirection;
       let lastAction = `${currentPlayer.name} played ${card.color} ${card.value}`;
       let activeEffects: string[] = [];
       let newColor = state.currentColor;
       
-      // Apply card effects
       switch (card.type) {
         case 'reverse':
           direction = direction === 'clockwise' ? 'counter-clockwise' : 'clockwise';
@@ -111,20 +105,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           break;
           
         case 'draw2':
-          // Next player draws 2 cards
           const nextPlayer = state.players[getNextPlayerIndex(
             state.currentPlayerIndex,
             state.players.length,
             direction
           )];
           
-          // Add 2 cards from the deck to the next player
           if (state.deck.length >= 2) {
             const cardsToDraw = state.deck.slice(-2);
             const remainingDeck = state.deck.slice(0, -2);
             
-            const nextPlayerIndex = updatedPlayers.findIndex(p => p.id === nextPlayer.id);
-            updatedPlayers[nextPlayerIndex] = {
+            const playerTargetIndex = updatedPlayers.findIndex(p => p.id === nextPlayer.id);
+            updatedPlayers[playerTargetIndex] = {
               ...nextPlayer,
               cards: [...nextPlayer.cards, ...cardsToDraw]
             };
@@ -132,8 +124,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             lastAction = `${currentPlayer.name} made ${nextPlayer.name} draw 2 cards`;
             activeEffects.push('draw2');
             
-            // Skip the next player
-            nextPlayerIndex = getNextPlayerIndex(
+            const skipToPlayerIndex = getNextPlayerIndex(
               state.currentPlayerIndex,
               state.players.length,
               direction,
@@ -145,7 +136,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
               players: updatedPlayers,
               deck: remainingDeck,
               discardPile: [...state.discardPile, card],
-              currentPlayerIndex: nextPlayerIndex,
+              currentPlayerIndex: skipToPlayerIndex,
               gameDirection: direction,
               currentColor: card.color,
               lastAction,
@@ -163,20 +154,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         case 'wild4':
           newColor = chosenColor || 'red';
           
-          // Next player draws 4 cards
           const wildNextPlayer = state.players[getNextPlayerIndex(
             state.currentPlayerIndex,
             state.players.length,
             direction
           )];
           
-          // Add 4 cards from the deck to the next player
           if (state.deck.length >= 4) {
             const cardsToDraw = state.deck.slice(-4);
             const remainingDeck = state.deck.slice(0, -4);
             
-            const nextPlayerIndex = updatedPlayers.findIndex(p => p.id === wildNextPlayer.id);
-            updatedPlayers[nextPlayerIndex] = {
+            const wildTargetIndex = updatedPlayers.findIndex(p => p.id === wildNextPlayer.id);
+            updatedPlayers[wildTargetIndex] = {
               ...wildNextPlayer,
               cards: [...wildNextPlayer.cards, ...cardsToDraw]
             };
@@ -184,8 +173,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             lastAction = `${currentPlayer.name} changed the color to ${newColor} and made ${wildNextPlayer.name} draw 4 cards`;
             activeEffects.push('wild4');
             
-            // Skip the next player
-            nextPlayerIndex = getNextPlayerIndex(
+            const wildSkipIndex = getNextPlayerIndex(
               state.currentPlayerIndex,
               state.players.length,
               direction,
@@ -197,7 +185,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
               players: updatedPlayers,
               deck: remainingDeck,
               discardPile: [...state.discardPile, card],
-              currentPlayerIndex: nextPlayerIndex,
+              currentPlayerIndex: wildSkipIndex,
               gameDirection: direction,
               currentColor: newColor,
               lastAction,
@@ -207,14 +195,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           break;
       }
       
-      // Get the next player
       nextPlayerIndex = getNextPlayerIndex(
         state.currentPlayerIndex,
         state.players.length,
         direction
       );
       
-      // Reset UNO call status when player plays a card
       if (updatedPlayerCards.length > 1) {
         updatedPlayers[state.currentPlayerIndex] = {
           ...updatedPlayers[state.currentPlayerIndex],
@@ -235,9 +221,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     
     case 'DRAW_CARD': {
-      // Player draws a card from the deck
       if (state.deck.length === 0) {
-        // Reshuffle discard pile except for the top card
         const topCard = state.discardPile[state.discardPile.length - 1];
         const cardsToReshuffle = state.discardPile.slice(0, -1);
         const newDeck = shuffleDeck(cardsToReshuffle);
@@ -255,19 +239,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       const drawnCard = state.deck[state.deck.length - 1];
       const remainingDeck = state.deck.slice(0, -1);
       
-      // Add the drawn card to the player's hand
       const updatedPlayers = [...state.players];
       updatedPlayers[state.currentPlayerIndex] = {
         ...currentPlayer,
         cards: [...currentPlayer.cards, drawnCard],
-        hasCalledUno: false // Reset UNO call when drawing
+        hasCalledUno: false
       };
       
-      // Check if the drawn card can be played
       const topCard = state.discardPile[state.discardPile.length - 1];
       const canPlay = canPlayCard(drawnCard, topCard, state.currentColor);
       
-      // If the card can't be played, move to the next player
       if (!canPlay) {
         const nextPlayerIndex = getNextPlayerIndex(
           state.currentPlayerIndex,
@@ -285,7 +266,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
       }
       
-      // If the card can be played, keep the same player (they can choose to play or keep)
       return {
         ...state,
         players: updatedPlayers,
@@ -298,7 +278,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'CALL_UNO': {
       const currentPlayer = state.players[state.currentPlayerIndex];
       
-      // Player must have exactly one card to call UNO
       if (currentPlayer.cards.length !== 1) {
         return state;
       }
@@ -327,9 +306,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       
       const player = state.players[playerIndex];
       
-      // Check if the player has one card and hasn't called UNO
       if (player.cards.length === 1 && !player.hasCalledUno) {
-        // Draw 2 penalty cards
         if (state.deck.length >= 2) {
           const cardsToDraw = state.deck.slice(-2);
           const remainingDeck = state.deck.slice(0, -2);
@@ -356,18 +333,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case 'AI_TURN': {
       const currentPlayer = state.players[state.currentPlayerIndex];
       
-      // Skip if not an AI player or game is finished
       if (!currentPlayer.isAI || state.gameStatus !== 'playing') {
         return state;
       }
       
       const { cardPlayed, chosenColor } = makeAIMove(state);
       
-      // If AI has a playable card
       if (cardPlayed) {
-        // Call UNO if playing second-to-last card
         if (currentPlayer.cards.length === 2) {
-          // AI has 50% chance to forget to call UNO
           const willCallUno = Math.random() > 0.5;
           
           if (willCallUno) {
@@ -386,13 +359,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
           }
         }
         
-        // Play the chosen card
         return gameReducer(state, {
           type: 'PLAY_CARD',
           payload: { cardId: cardPlayed.id, chosenColor: chosenColor || undefined }
         });
       } else {
-        // Draw a card
         return gameReducer(state, { type: 'DRAW_CARD' });
       }
     }
@@ -416,7 +387,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
   }
 };
 
-// Provider component
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const initialState: GameState = {
     players: [],
@@ -433,7 +403,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   
   const [state, dispatch] = useReducer(gameReducer, initialState);
   
-  // Helper functions
   const playCard = (cardId: string, chosenColor?: CardColor) => {
     dispatch({ type: 'PLAY_CARD', payload: { cardId, chosenColor } });
   };
@@ -461,14 +430,12 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'RESET_GAME' });
   };
   
-  // AI Turn effect
   useEffect(() => {
     if (
       state.gameStatus === 'playing' &&
       state.players.length > 0 &&
       state.players[state.currentPlayerIndex]?.isAI
     ) {
-      // Add a delay to make AI turns feel more natural
       const timeoutId = setTimeout(() => {
         dispatch({ type: 'AI_TURN' });
       }, 1500);
@@ -477,7 +444,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [state.currentPlayerIndex, state.gameStatus]);
   
-  // Effects for notifying about important game events
   useEffect(() => {
     if (state.activeEffects.includes('uno')) {
       toast({
@@ -514,7 +480,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to use the game context
 export const useGame = () => {
   const context = useContext(GameContext);
   if (context === undefined) {
